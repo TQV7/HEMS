@@ -6,7 +6,8 @@ strategies = ["Greedy baseline", "MILP (no export)", "MILP (export allowed)"]
 annual_costs = [370, 172, 91]
 
 # Create output folder if needed
-output_dir = Path("outputs/figures")
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+output_dir = PROJECT_ROOT / "outputs" / "figures"
 output_dir.mkdir(parents=True, exist_ok=True)
 
 # Plot
