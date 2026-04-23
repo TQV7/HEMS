@@ -117,30 +117,22 @@ def main():
     end_date = "2024-12-31"
     example_day = "2024-03-02"
 
-    # -----------------------------
-    # Create output folders
-    # -----------------------------
+
     outputs_dir = Path("outputs")
     results_dir = outputs_dir / "results"
     results_dir.mkdir(parents=True, exist_ok=True)
 
-    # -----------------------------
-    # Load merged dataset
-    # -----------------------------
+
     merged = build_merged_df()
     print("Merged dataset:", merged.shape)
     print(merged.head())
 
-    # -----------------------------
-    # Create schedulers
-    # -----------------------------
+
     greedy_scheduler = GreedyScheduler(CONFIG.battery)
     milp_scheduler = MilpScheduler(CONFIG.battery)
     milp_export_allowed_scheduler = MilpExportAllowedScheduler(CONFIG.battery)
 
-    # -----------------------------
-    # Run simulations
-    # -----------------------------
+
     ts_greedy, daily_greedy = simulate_period(
         merged=merged,
         start_date=start_date,
@@ -165,9 +157,7 @@ def main():
         soc_init_kwh=CONFIG.battery.initial_soc_kwh,
     )
 
-    # -----------------------------
-    # Save baseline results to CSV
-    # -----------------------------
+
     daily_greedy.to_csv(results_dir / "daily_greedy.csv")
     daily_milp.to_csv(results_dir / "daily_milp_no_export.csv")
     daily_milp_export.to_csv(results_dir / "daily_milp_export_allowed.csv")
@@ -178,9 +168,7 @@ def main():
 
     print("\nSaved baseline results to outputs/results/")
 
-    # -----------------------------
-    # Monthly breakdown
-    # -----------------------------
+
     monthly_breakdown = build_monthly_breakdown(
         daily_greedy=daily_greedy,
         daily_milp=daily_milp,
@@ -192,9 +180,7 @@ def main():
     print("\n=== MONTHLY BREAKDOWN ===")
     print(monthly_breakdown)
 
-    # -----------------------------
-    # Compute totals
-    # -----------------------------
+
     greedy_total_pence = daily_greedy["cost_pence"].sum()
     milp_total_pence = daily_milp["cost_pence"].sum()
     milp_export_total_pence = daily_milp_export["cost_pence"].sum()
@@ -233,9 +219,7 @@ def main():
     print(f"No-export MILP savings: £{savings_gbp:.2f} ({savings_pct:.2f}%)")
     print(f"Export-allowed MILP savings: £{savings_export_gbp:.2f} ({savings_export_pct:.2f}%)")
 
-    # -----------------------------
-    # Battery size sweep (no-export MILP)
-    # -----------------------------
+
     capacities = [5, 10, 15]
     sweep_df = run_battery_sweep(
         merged=merged,
@@ -249,9 +233,7 @@ def main():
     print("\n=== BATTERY SWEEP (NO-EXPORT MILP) ===")
     print(sweep_df)
 
-    # -----------------------------
-    # Plot results
-    # -----------------------------
+
     plot_daily_cost_comparison(daily_greedy, daily_milp)
     plot_soc_comparison(ts_greedy, ts_milp)
     plot_price_vs_battery(ts_milp, "2024-01-15")

@@ -21,9 +21,7 @@ def build_merged_df(data_dir: Path | None = None) -> pd.DataFrame:
     if data_dir is None:
         data_dir = DATA_DIR
 
-    # -----------------------------
-    # Load household demand data
-    # -----------------------------
+
     load_raw = pd.read_csv(data_dir / CONFIG.data.load_filename)
     load_raw[" Start"] = pd.to_datetime(load_raw[" Start"], utc=True)
 
@@ -38,9 +36,6 @@ def build_merged_df(data_dir: Path | None = None) -> pd.DataFrame:
         .sort_index()[[CONFIG.data.load_column]]
     )
 
-    # -----------------------------
-    # Load tariff data
-    # -----------------------------
     prices_raw = pd.read_csv(data_dir / CONFIG.data.price_filename)
     prices_raw["Period from"] = pd.to_datetime(
         prices_raw["Period from"], dayfirst=True
@@ -60,15 +55,11 @@ def build_merged_df(data_dir: Path | None = None) -> pd.DataFrame:
         ]
     )
 
-    # -----------------------------
-    # Load solar data from Python file
-    # -----------------------------
     solar_namespace = runpy.run_path(str(data_dir / CONFIG.data.solar_filename))
     actual_solar = solar_namespace["actualSolar"]
 
     rows = []
 
-    # actualSolar is 1-indexed for month/day, with index 0 unused.
     for month in range(1, 13):
         for day in range(1, len(actual_solar[month])):
             for hour in range(24):
@@ -82,11 +73,6 @@ def build_merged_df(data_dir: Path | None = None) -> pd.DataFrame:
         .sort_index()
     )
 
-    # -----------------------------
-    # Convert hourly solar to half-hourly
-    # -----------------------------
-    # Forward-fill to create :00 and :30 timestamps, then split each hourly
-    # energy value evenly across the two half-hour slots.
     solar_halfhour = solar_hourly.resample("30min").ffill()
 
     if CONFIG.data.split_hourly_solar_into_half_hours:
@@ -98,9 +84,6 @@ def build_merged_df(data_dir: Path | None = None) -> pd.DataFrame:
 
     solar_halfhour = solar_halfhour[[CONFIG.data.solar_column]]
 
-    # -----------------------------
-    # Merge datasets
-    # -----------------------------
     merged = (
         load.join(prices, how="inner")
         .join(solar_halfhour, how="left")

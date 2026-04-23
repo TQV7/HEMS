@@ -66,9 +66,6 @@ class MilpScheduler(BatteryScheduler):
 
         model = LpProblem("BatteryScheduleDayMILP_NoBatteryExport", LpMinimize)
 
-        # -----------------------------
-        # Decision variables
-        # -----------------------------
         # Battery-level decisions
         charge = [LpVariable(f"charge_{t}", lowBound=0) for t in range(T)]
         discharge = [LpVariable(f"discharge_{t}", lowBound=0) for t in range(T)]
@@ -105,9 +102,7 @@ class MilpScheduler(BatteryScheduler):
         # 0 => exporting allowed, import forced to 0
         is_importing = [LpVariable(f"is_importing_{t}", cat=LpBinary) for t in range(T)]
 
-        # -----------------------------
         # SOC dynamics
-        # -----------------------------
         model += (
             soc[0]
             == soc_init_kwh
@@ -123,16 +118,10 @@ class MilpScheduler(BatteryScheduler):
                 - discharge[t] / self.battery.discharge_efficiency
             )
 
-        # -----------------------------
-        # Charge/discharge exclusivity
-        # -----------------------------
         for t in range(T):
             model += charge[t] <= e_max_charge * is_charging[t]
             model += discharge[t] <= e_max_discharge * (1 - is_charging[t])
 
-        # -----------------------------
-        # Grid import/export exclusivity
-        # -----------------------------
         grid_big_m = (
             float(np.max(load))
             + float(np.max(solar))
@@ -145,9 +134,6 @@ class MilpScheduler(BatteryScheduler):
             model += grid_import[t] <= grid_big_m * is_importing[t]
             model += grid_export[t] <= grid_big_m * (1 - is_importing[t])
 
-        # -----------------------------
-        # Flow conservation constraints
-        # -----------------------------
         for t in range(T):
             # Solar allocation
             model += solar_to_load[t] + solar_to_battery[t] + solar_to_export[t] == solar[t]
@@ -167,15 +153,9 @@ class MilpScheduler(BatteryScheduler):
             # Export can ONLY come from solar
             model += grid_export[t] == solar_to_export[t]
 
-        # -----------------------------
-        # Optional end-of-day SOC floor
-        # -----------------------------
         if CONFIG.simulation.enforce_terminal_soc_floor:
             model += soc[T - 1] >= CONFIG.simulation.terminal_soc_floor_kwh
 
-        # -----------------------------
-        # Objective
-        # -----------------------------
         throughput_penalty = CONFIG.simulation.throughput_penalty_per_kwh
 
         model += lpSum(
@@ -185,9 +165,6 @@ class MilpScheduler(BatteryScheduler):
             for t in range(T)
         )
 
-        # -----------------------------
-        # Solve
-        # -----------------------------
         solver = PULP_CBC_CMD(
             msg=self.solver_msg,
             timeLimit=CONFIG.solver.time_limit_seconds,
@@ -198,9 +175,6 @@ class MilpScheduler(BatteryScheduler):
         if status_str != "Optimal":
             raise RuntimeError(f"Solver did not find optimal solution: {status_str}")
 
-        # -----------------------------
-        # Collect results
-        # -----------------------------
         out = pd.DataFrame(index=df.index)
         out["load_kwh"] = load
         out["solar_kwh"] = solar
@@ -239,9 +213,7 @@ class MilpScheduler(BatteryScheduler):
         cost_pence = float(out["cost_pence"].sum())
         soc_end_kwh = float(out["soc_kwh"].iloc[-1])
 
-        # -----------------------------
         # Sanity checks
-        # -----------------------------
         tol = 1e-6
 
         if (out["soc_kwh"] < self.battery.min_soc_kwh - tol).any():

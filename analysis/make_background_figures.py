@@ -8,18 +8,12 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 
-# --------------------------------------------------
-# Paths
-# --------------------------------------------------
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = PROJECT_ROOT / "data"
 FIGURES_DIR = PROJECT_ROOT / "outputs" / "figures"
 FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 
 
-# --------------------------------------------------
-# Data loading
-# --------------------------------------------------
 def build_merged_df(data_dir: Path = DATA_DIR) -> pd.DataFrame:
     """
     Build a merged half-hourly dataframe with:
@@ -84,9 +78,6 @@ def build_merged_df(data_dir: Path = DATA_DIR) -> pd.DataFrame:
     return merged
 
 
-# --------------------------------------------------
-# Helpers
-# --------------------------------------------------
 def add_time_of_day_columns(df: pd.DataFrame) -> pd.DataFrame:
     out = df.copy()
     out["hour_decimal"] = out.index.hour + out.index.minute / 60.0
@@ -95,10 +86,6 @@ def add_time_of_day_columns(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def select_representative_solar_day(df: pd.DataFrame) -> str:
-    """
-    Pick the day with the highest total solar generation.
-    Good for an explanatory 'typical solar day' figure.
-    """
     daily_solar = df["solar_kwh"].groupby(df.index.strftime("%Y-%m-%d")).sum()
     return daily_solar.idxmax()
 
@@ -139,10 +126,6 @@ def plot_representative_day_profile(df: pd.DataFrame, day: str) -> None:
 
 
 def plot_average_daily_profile(df: pd.DataFrame) -> None:
-    """
-    Average half-hourly load, solar, and import price over the whole year.
-    Very useful background figure.
-    """
     tmp = add_time_of_day_columns(df)
     avg = tmp.groupby("hour_decimal")[
         ["load_kwh", "solar_kwh", "import_price_p_per_kwh"]
@@ -177,10 +160,6 @@ def plot_average_daily_profile(df: pd.DataFrame) -> None:
 
 
 def plot_average_import_price_profile(df: pd.DataFrame) -> None:
-    """
-    Simple average import/export tariff profile across the day.
-    Good for showing low overnight prices and daily variation.
-    """
     tmp = add_time_of_day_columns(df)
     avg = tmp.groupby("hour_decimal")[
         ["import_price_p_per_kwh", "export_price_p_per_kwh"]
@@ -201,10 +180,6 @@ def plot_average_import_price_profile(df: pd.DataFrame) -> None:
 
 
 def plot_seasonal_average_profiles(df: pd.DataFrame) -> None:
-    """
-    Optional extra figure: average daily load/solar by season.
-    Good if you want one more explanatory chart.
-    """
     tmp = add_time_of_day_columns(df)
     month_to_season = {
         12: "Winter", 1: "Winter", 2: "Winter",
@@ -238,9 +213,6 @@ def plot_seasonal_average_profiles(df: pd.DataFrame) -> None:
         plt.close()
 
 
-# --------------------------------------------------
-# Main
-# --------------------------------------------------
 def main() -> None:
     merged = build_merged_df()
 

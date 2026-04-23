@@ -2,9 +2,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 
-# -----------------------------
-# Paths
-# -----------------------------
 PROJECT_ROOT = Path(__file__).resolve().parent
 DATA_DIR = PROJECT_ROOT / "data"
 OUTPUT_DIR = PROJECT_ROOT / "outputs"
@@ -12,9 +9,6 @@ FIGURES_DIR = OUTPUT_DIR / "figures"
 RESULTS_DIR = OUTPUT_DIR / "results"
 
 
-# -----------------------------
-# Core battery parameters
-# -----------------------------
 @dataclass(frozen=True)
 class BatteryConfig:
     capacity_kwh: float = 10.0
@@ -35,9 +29,7 @@ class BatteryConfig:
         return self.max_discharge_kw * self.timestep_hours
 
 
-# -----------------------------
 # Simulation settings
-# -----------------------------
 @dataclass(frozen=True)
 class SimulationConfig:
     start_date: str = "2024-01-01"
@@ -53,9 +45,7 @@ class SimulationConfig:
     throughput_penalty_per_kwh: float = 0.01
 
 
-# -----------------------------
 # Tariff settings
-# -----------------------------
 @dataclass(frozen=True)
 class TariffConfig:
     use_fixed_export_price: bool = True
@@ -65,9 +55,7 @@ class TariffConfig:
     export_price_column: str = "export_price_p_per_kwh"
 
 
-# -----------------------------
 # Solver settings
-# -----------------------------
 @dataclass(frozen=True)
 class SolverConfig:
     solver_name: str = "PULP_CBC_CMD"
@@ -75,9 +63,7 @@ class SolverConfig:
     time_limit_seconds: int | None = None
 
 
-# -----------------------------
 # Data settings
-# -----------------------------
 @dataclass(frozen=True)
 class DataConfig:
     load_filename: str = "house-load-2024.csv"
@@ -91,9 +77,7 @@ class DataConfig:
     split_hourly_solar_into_half_hours: bool = True
 
 
-# -----------------------------
 # Plot settings
-# -----------------------------
 @dataclass(frozen=True)
 class PlotConfig:
     save_figures: bool = True
@@ -101,18 +85,14 @@ class PlotConfig:
     dpi: int = 150
 
 
-# -----------------------------
 # Scenario definition
-# -----------------------------
 @dataclass(frozen=True)
 class ScenarioConfig:
     name: str
     battery: BatteryConfig
 
 
-# -----------------------------
 # Top-level app config
-# -----------------------------
 @dataclass(frozen=True)
 class AppConfig:
     battery: BatteryConfig = field(default_factory=BatteryConfig)
