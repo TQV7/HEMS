@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+
+venv/
+.env
+
+.DS_Store
+
+outputs/
+
+.ipynb_checkpoints/
+
+*.log
+experiment_log.txt
